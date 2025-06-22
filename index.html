@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Simulador IQAI</title>
+  <!-- Biblioteca para exportar PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      background-image: url('https://static.isq.ai/upload/images/DtTiszqOYnGFfTHnOwZ-P.jpeg');
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center;
+      background-attachment: fixed;
+      background-color: #f2f4f8;
+      opacity: 0.95;
+    }
+    .content-wrapper {
+      background-color: rgba(255, 255, 255, 0.95);
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+    h1, h2 {
+      color: #1a237e;
+      padding: 10px 15px;
+      border-radius: 5px;
+      margin-top: 0;
+    }
+    h1 {
+      background-color: rgba(26, 35, 126, 0.1);
+      border-left: 5px solid #1a237e;
+      font-size: 28px;
+    }
+    h2 {
+      background-color: rgba(26, 35, 126, 0.08);
+      border-left: 4px solid #1a237e;
+      font-size: 22px;
+      margin-top: 30px;
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 15px;
+      color: #333;
+    }
+    input, select {
+      font-size: 1em;
+      padding: 10px;
+      margin-top: 5px;
+      width: 250px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background-color: #fff;
+      transition: all 0.3s ease;
+    }
+    /* Estilo para o select de membro com cores dinâmicas */
+    #membro-container {
+      position: relative;
+      display: inline-block;
+    }
+    #membro {
+      padding-left: 40px; /* Espaço para o indicador de cor */
+    }
+    #membro-indicator {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid white;
+      box-shadow: 0 0 3px rgba(0,0,0,0.3);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: #fff;
+      margin-top: 20px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+    }
+    th, td {
+      border: 2px solid #d1d1d1;
+      padding: 12px;
+      text-align: right;
+    }
+    th {
+      background-color: #1a237e;
+      color: #fff;
+      font-weight: bold;
+      text-transform: uppercase;
+      font-size: 0.9em;
+    }
+    td:first-child, th:first-child {
+      text-align: center;
+    }
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+    .resumo {
+      max-width: 650px;
+    }
+    .resumo td {
+      text-align: left;
+    }
+    /* Estilos ajustados para as colunas */
+    th:nth-child(1), td:nth-child(1) {
+      width: 50px;
+    }
+    th:nth-child(2), td:nth-child(2) {
+      width: 75px;
+    }
+    th:nth-child(3), td:nth-child(3), th:nth-child(4), td:nth-child(4), th:nth-child(5), td:nth-child(5), th:nth-child(6), td:nth-child(6) {
+      width: 150px;
+    }
+    /* Estilos para os botões de ação */
+    .action-buttons {
+      position: fixed;
+      top: 120px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 1000;
+    }
+    .action-button {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 5px;
+      background-color: #1a237e;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+    .action-button:hover {
+      background-color: #0d47a1;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+    .action-button i {
+      font-size: 1.2em;
+    }
+    .cadastro-link {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-color: #1a237e;
+      color: white;
+      padding: 12px 18px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: bold;
+      z-index: 1000;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+    }
+    .cadastro-link:hover {
+      background-color: #0d47a1;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    .info-link {
+      position: fixed;
+      top: 70px;
+      right: 20px;
+      background-color: #4caf50;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: bold;
+      z-index: 1000;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+    }
+    .info-link:hover {
+      background-color: #3d8b40;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    /* Novo estilo para agrupar os botões de exportação */
+    .right-side-buttons {
+      position: fixed;
+      top: 120px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 1000;
+    }
+    /* Créditos */
+    .creditos {
+      margin-top: 30px;
+      text-align: center;
+      font-size: 0.9em;
+      color: #666;
+      padding: 10px;
+      background-color: rgba(255, 255, 255, 0.8);
+      border-radius: 5px;
+    }
+    /* Estilo para o seletor de idioma */
+    #google_translate_element {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 9999;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 5px;
+      padding: 5px 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+    /* Ajuste para evitar sobreposição com o seletor de idioma */
+    .content-wrapper {
+      margin-left: 30px;
+    }
+  </style>
+  <!-- Ícones para os botões -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+  <!-- Seletor de Idioma -->
+  <div id="google_translate_element"
+       style="position: fixed; top: 10px; left: 10px; z-index: 9999;
+       background: rgba(255, 255, 255, 0.8); border-radius: 5px;
+       padding: 5px 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
+  </div>
+
+  <div class="content-wrapper">
+    <a href="https://mobile.isq.ai/#/pages/login/register?invite=9969554" class="cadastro-link" target="_blank">
+      🔗 Cadastre-se na INSIGHTQUANTAI e ative sua conta
+    </a>
+    <a href="https://www.isq.ai/articles.html" class="info-link" target="_blank">
+      <i class="fas fa-info-circle"></i> Conheça mais sobre o projeto
+    </a>
+
+    <div class="right-side-buttons">
+      <button class="action-button" onclick="exportToPDF()" style="background-color: #ff4444;">
+        <i class="fas fa-file-pdf" style="color: white;"></i> <span style="color: white;">PDF</span>
+      </button>
+    </div>
+
+    <h1>Simulador de Projeção de Ganhos - IQAI</h1>
+
+    <label>Montante da negociação:</label>
+    <input type="number" id="montante" value="0" step="0.01" />
+
+    <label>Duração da estratégia em dias:</label>
+    <select id="duracao">
+      <option value="1">1 dia (3%)</option>
+      <option value="7">7 dias (3.1%)</option>
+      <option value="15">15 dias (3.3%)</option>
+      <option value="30" selected>30 dias (3.8%)</option>
+    </select>
+
+    <label>Tipo de Membro / Taxa de serviço:</label>
+    <div id="membro-container">
+      <div id="membro-indicator"></div>
+      <select id="membro">
+        <option value="60">Nível 1 (60%)</option>
+        <option value="50">Avançado (50%)</option>
+        <option value="40">Elite (40%)</option>
+      </select>
+    </div>
+
+    <h2>Resumo da Negociação</h2>
+    <table class="resumo">
+      <tr><td><strong>Data da negociação:</strong></td><td id="data-negociacao">--</td></tr>
+      <tr><td><strong>Montante da negociação:</strong></td><td id="montante-resumo">--</td></tr>
+      <tr><td><strong>Duração da estratégia/Taxa de retorno:</strong></td><td id="duracao-escolhida">--</td></tr>
+      <tr><td><strong>Taxa de serviço do lucro da ordem:</strong></td><td id="taxa-servico">--</td></tr>
+      <tr><td><strong>Energia por hora:</strong></td><td id="energia-hora">--</td></tr>
+      <tr><td><strong>Consumo diário:</strong></td><td id="energia-dia">--</td></tr>
+      <tr><td><strong>Energia total da estratégia:</strong></td><td id="preco-total">--</td></tr>
+      <tr><td><strong>Ganho inicial:</strong></td><td id="ganhos-iniciais">--</td></tr>
+    </table>
+
+    <h2>Projeção dos ganhos para 30 meses</h2>
+    <table id="tabela-projecao">
+      <thead>
+        <tr>
+          <th>Nº resgate</th>
+          <th>Data de resgate</th>
+          <th>Reaplicação de investimento</th>
+          <th>Ganhos do resgate da última negociação</th>
+          <th>Ativo</th>
+          <th>Energia necessária para negociação</th>
+        </tr>
+      </thead>
+      <tbody id="tabelaResultado"></tbody>
+    </table>
+
+    <!-- Créditos -->
+    <div class="creditos">
+      Desenvolvido por Roberto Cesar
+    </div>
+  </div>
+
+  <!-- Script do Google Translate -->
+  <script type="text/javascript">
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({
+        pageLanguage: 'pt',
+        includedLanguages: 'pt,en,fr,it,ja,zh-CN,ar,nl,ko,cs',
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+      }, 'google_translate_element');
+    }
+  </script>
+
+  <script type="text/javascript"
+    src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit">
+  </script>
+
+  <script>
+    // Inicializa o jsPDF (para exportar PDF)
+    const { jsPDF } = window.jspdf;
+
+    // Elementos do DOM
+    const montanteInput = document.getElementById("montante");
+    const duracaoInput = document.getElementById("duracao");
+    const membroInput = document.getElementById("membro");
+    const membroIndicator = document.getElementById("membro-indicator");
+    const dataNegociacao = document.getElementById("data-negociacao");
+    const montanteResumo = document.getElementById("montante-resumo");
+    const duracaoEscolhida = document.getElementById("duracao-escolhida");
+    const taxaServico = document.getElementById("taxa-servico");
+    const energiaHoraEl = document.getElementById("energia-hora");
+    const energiaDiaEl = document.getElementById("energia-dia");
+    const precoTotal = document.getElementById("preco-total");
+    const ganhosIniciais = document.getElementById("ganhos-iniciais");
+    const tabela = document.getElementById("tabelaResultado");
+
+    // Cores para cada tipo de membro
+    const memberColors = {
+      '60': '#4285F4', // Azul para Nível 1
+      '50': '#FBBC05', // Amarelo para Avançado
+      '40': '#B39DDB'  // Lilás para Elite
+    };
+
+    // Atualiza o indicador de cor do tipo de membro
+    function updateMemberIndicator() {
+      const selectedValue = membroInput.value;
+      membroIndicator.style.backgroundColor = memberColors[selectedValue];
+    }
+
+    // Formata valores em USD
+    function formatarUSD(valor) {
+      return isNaN(valor) ? "--" : new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD"
+      }).format(valor);
+    }
+
+    // Calcula a faixa da taxa de energia conforme o ativo
+    function taxaEnergia(valor) {
+      if (valor < 300) return "Fora da faixa";
+      if (valor < 2000) return 1.02;
+      const blocos = Math.floor((valor - 2000) / 1000) + 2;
+      return Math.round(blocos * 1.02 * 100) / 100;
+    }
+
+    // Exportar para PDF
+    function exportToPDF() {
+      const doc = new jsPDF();
+      const title = document.querySelector('h1').textContent;
+      const date = new Date().toLocaleDateString();
+      
+      // Adiciona título
+      doc.setFontSize(18);
+      doc.text(title, 14, 15);
+      doc.setFontSize(12);
+      doc.text(`Gerado em: ${date}`, 14, 22);
+      
+      // Adiciona resumo
+      doc.setFontSize(14);
+      doc.text(document.querySelectorAll('h2')[0].textContent, 14, 35);
+      
+      let yPosition = 45;
+      const resumoRows = document.querySelectorAll('.resumo tr');
+      resumoRows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        doc.setFontSize(10);
+        doc.text(cells[0].textContent, 14, yPosition);
+        doc.text(cells[1].textContent, 80, yPosition);
+        yPosition += 7;
+      });
+      
+      // Adiciona tabela de projeção
+      doc.setFontSize(14);
+      doc.text(document.querySelectorAll('h2')[1].textContent, 14, yPosition + 10);
+      yPosition += 20;
+      
+      // Cabeçalhos da tabela
+      const headers = [];
+      document.querySelectorAll('#tabela-projecao th').forEach(th => {
+        headers.push(th.textContent);
+      });
+      
+      // Dados da tabela
+      const data = [];
+      document.querySelectorAll('#tabela-projecao tbody tr').forEach(tr => {
+        const rowData = [];
+        tr.querySelectorAll('td').forEach(td => {
+          rowData.push(td.textContent);
+        });
+        data.push(rowData);
+      });
+      
+      // Adiciona tabela ao PDF
+      doc.autoTable({
+        head: [headers],
+        body: data,
+        startY: yPosition,
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [26, 35, 126] }
+      });
+      
+      // Salva o PDF
+      doc.save(`Simulador_IQAI_${date.replace(/\//g, '-')}.pdf`);
+    }
+
+    // Função principal
+    function calcular() {
+      const B3 = parseFloat(montanteInput.value);
+      const C3 = parseInt(duracaoInput.value);
+      const G5 = parseFloat(membroInput.value);
+      const taxas = {1: 0.03, 7: 0.031, 15: 0.033, 30: 0.038};
+      const C4 = taxas[C3]; // Taxa de retorno esperada
+      
+      dataNegociacao.innerText = new Date().toLocaleDateString("pt-BR");
+      montanteResumo.innerText = formatarUSD(B3);
+      duracaoEscolhida.innerText = `${C3} dias (${(C4 * 100).toFixed(1)}%)`;
+      taxaServico.innerText = `${G5}%`;
+      
+      // Cálculo inicial
+      const ganhoLiquido = (B3 * C4 * C3) * (1 - G5 / 100);
+      const ativoInicial = B3 + ganhoLiquido;
+      
+      // Cálculo da energia
+      const taxaEnergiaHora = taxaEnergia(B3);
+      const energiaHora = typeof taxaEnergiaHora === "number" ? taxaEnergiaHora : "Fora da faixa";
+      const energiaDia = typeof taxaEnergiaHora === "number" ? taxaEnergiaHora * 24 / 10 : "Fora da faixa";
+      const energiaTotal = typeof taxaEnergiaHora === "number" ? energiaDia * C3 : "Fora da faixa";
+      
+      energiaHoraEl.innerText = typeof energiaHora === "number" ? formatarUSD(energiaHora) : energiaHora;
+      energiaDiaEl.innerText = typeof energiaDia === "number" ? formatarUSD(energiaDia) : energiaDia;
+      precoTotal.innerText = typeof energiaTotal === "number" ? formatarUSD(energiaTotal) : energiaTotal;
+      ganhosIniciais.innerText = formatarUSD(ganhoLiquido);
+      
+      // Inicializa projeção
+      tabela.innerHTML = "";
+      const hoje = new Date();
+      let reaplicacao = B3;
+      let ativoAtual = ativoInicial;
+      
+      for (let i = 1; i <= 30; i++) {
+        // Cálculo dos ganhos para esta rodada
+        const ganhoRodada = (reaplicacao * C4 * C3) * (1 - G5 / 100);
+        const ativoRodada = reaplicacao + ganhoRodada;
+        
+        // Cálculo da energia para esta rodada
+        const taxaRodada = taxaEnergia(ativoRodada);
+        const energiaRodada = typeof taxaRodada === "number" ? (taxaRodada * 24 / 10 * C3) : "Fora da faixa";
+        
+        // Cálculo da reaplicação para próxima rodada
+        reaplicacao = typeof energiaRodada === "number" ? (ativoRodada - energiaRodada) : 0;
+        
+        // Data do resgate
+        const dataResgate = new Date();
+        dataResgate.setDate(hoje.getDate() + i * C3);
+        const dataTexto = dataResgate.toLocaleDateString("pt-BR");
+        
+        tabela.innerHTML += `
+          <tr>
+            <td>${i}º</td>
+            <td>${dataTexto}</td>
+            <td>${formatarUSD(reaplicacao)}</td>
+            <td>${formatarUSD(ganhoRodada)}</td>
+            <td>${formatarUSD(ativoRodada)}</td>
+            <td>${typeof energiaRodada === "number" ? formatarUSD(energiaRodada) : energiaRodada}</td>
+          </tr>`;
+      }
+    }
+
+    // Event Listeners
+    montanteInput.addEventListener("input", calcular);
+    duracaoInput.addEventListener("change", calcular);
+    membroInput.addEventListener("change", function() {
+      updateMemberIndicator();
+      calcular();
+    });
+
+    // Inicialização
+    window.onload = function() {
+      updateMemberIndicator();
+      calcular();
+    };
+  </script>
+</body>
+</html>
+
