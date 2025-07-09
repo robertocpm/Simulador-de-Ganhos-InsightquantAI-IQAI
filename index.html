@@ -117,8 +117,18 @@
     th:nth-child(2), td:nth-child(2) {
       width: 75px;
     }
-    th:nth-child(3), td:nth-child(3), th:nth-child(4), td:nth-child(4), th:nth-child(5), td:nth-child(5), th:nth-child(6), td:nth-child(6) {
+    th:nth-child(3), td:nth-child(3), th:nth-child(4), td:nth-child(4), 
+    th:nth-child(5), td:nth-child(5), th:nth-child(6), td:nth-child(6),
+    th:nth-child(7), td:nth-child(7), th:nth-child(8), td:nth-child(8) {
       width: 150px;
+    }
+    /* Estilo para inputs nas células editáveis */
+    .editable-cell input {
+      width: 100%;
+      padding: 5px;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+      text-align: right;
     }
     /* Estilos para os botões de ação */
     .action-buttons {
@@ -225,6 +235,14 @@
     .content-wrapper {
       margin-left: 30px;
     }
+    
+    /* NOVAS REGRAS PARA AS CORES DOS CABEÇALHOS */
+    th:nth-child(7) { /* Aporte Incremental */
+      background-color: #008a1a; /* Verde suave */
+    }
+    th:nth-child(8) { /* Retiradas */
+      background-color: #c40000; /* Vermelho suave */
+    }
   </style>
   <!-- Ícones para os botões -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -246,10 +264,10 @@
     </a>
 
     <div class="right-side-buttons">
-      <button class="action-button" onclick="exportToPDF()" style="background-color: #ff4444;">
-        <i class="fas fa-file-pdf" style="color: white;"></i> <span style="color: white;">PDF</span>
-      </button>
-    </div>
+  <button class="action-button" onclick="exportToPDF()" style="background-color: #ff4444;">
+    <i class="fas fa-file-pdf" style="color: white;"></i> <span style="color: white;">PDF</span>
+  </button>
+</div>
 
     <h1>Simulador de Projeção de Ganhos - IQAI</h1>
 
@@ -293,9 +311,11 @@
           <th>Nº resgate</th>
           <th>Data de resgate</th>
           <th>Reaplicação de investimento</th>
-          <th>Ganhos do resgate da última negociação</th>
+          <th>Ganhos do resgate</th>
           <th>Ativo</th>
-          <th>Energia necessária para negociação</th>
+          <th>Energia necessária</th>
+          <th>Aporte Incremental</th>
+          <th>Retiradas</th>
         </tr>
       </thead>
       <tbody id="tabelaResultado"></tbody>
@@ -303,7 +323,7 @@
 
     <!-- Créditos -->
     <div class="creditos">
-      Desenvolvido por Roberto Cesar
+      © Roberto Cesar - v2.0
     </div>
   </div>
 
@@ -312,7 +332,7 @@
     function googleTranslateElementInit() {
       new google.translate.TranslateElement({
         pageLanguage: 'pt',
-        includedLanguages: 'pt,en,fr,it,ja,zh-CN,ar,nl,ko,cs',
+        includedLanguages: 'pt,pt-PT,en,fr,it,ja,zh-CN,ar,nl,ko,cs,af,en,es,ca,el,id,ga,hi,kk,fi,eu,ru,be,bn,iw,bg,de',
         layout: google.translate.TranslateElement.InlineLayout.SIMPLE
       }, 'google_translate_element');
     }
@@ -340,6 +360,10 @@
     const precoTotal = document.getElementById("preco-total");
     const ganhosIniciais = document.getElementById("ganhos-iniciais");
     const tabela = document.getElementById("tabelaResultado");
+
+    // Variáveis para armazenar os valores editáveis
+    let aportesIncrementais = Array(30).fill(0);
+    let retiradas = Array(30).fill(0);
 
     // Cores para cada tipo de membro
     const memberColors = {
@@ -412,7 +436,12 @@
       document.querySelectorAll('#tabela-projecao tbody tr').forEach(tr => {
         const rowData = [];
         tr.querySelectorAll('td').forEach(td => {
-          rowData.push(td.textContent);
+          // Remove os inputs para o PDF
+          if (td.querySelector('input')) {
+            rowData.push(formatarUSD(parseFloat(td.querySelector('input').value) || 0));
+          } else {
+            rowData.push(td.textContent);
+          }
         });
         data.push(rowData);
       });
@@ -428,6 +457,24 @@
       
       // Salva o PDF
       doc.save(`Simulador_IQAI_${date.replace(/\//g, '-')}.pdf`);
+    }
+
+    // Função para recalcular a projeção
+    function recalcularProjecao() {
+      // Atualiza os valores dos aportes e retiradas
+      const inputsAporte = document.querySelectorAll('.aporte-input');
+      const inputsRetirada = document.querySelectorAll('.retirada-input');
+      
+      inputsAporte.forEach((input, index) => {
+        aportesIncrementais[index] = parseFloat(input.value) || 0;
+      });
+      
+      inputsRetirada.forEach((input, index) => {
+        retiradas[index] = parseFloat(input.value) || 0;
+      });
+      
+      // Recalcula a projeção
+      calcular();
     }
 
     // Função principal
@@ -464,7 +511,7 @@
       let reaplicacao = B3;
       let ativoAtual = ativoInicial;
       
-      for (let i = 1; i <= 30; i++) {
+      for (let i = 0; i < 30; i++) {
         // Cálculo dos ganhos para esta rodada
         const ganhoRodada = (reaplicacao * C4 * C3) * (1 - G5 / 100);
         const ativoRodada = reaplicacao + ganhoRodada;
@@ -473,22 +520,32 @@
         const taxaRodada = taxaEnergia(ativoRodada);
         const energiaRodada = typeof taxaRodada === "number" ? (taxaRodada * 24 / 10 * C3) : "Fora da faixa";
         
-        // Cálculo da reaplicação para próxima rodada
-        reaplicacao = typeof energiaRodada === "number" ? (ativoRodada - energiaRodada) : 0;
+        // Cálculo da reaplicação para próxima rodada (com aporte e retiradas)
+        reaplicacao = typeof energiaRodada === "number" ? 
+          (ativoRodada - energiaRodada + (aportesIncrementais[i] || 0) - (retiradas[i] || 0)) : 0;
         
         // Data do resgate
         const dataResgate = new Date();
-        dataResgate.setDate(hoje.getDate() + i * C3);
+        dataResgate.setDate(hoje.getDate() + (i + 1) * C3);
         const dataTexto = dataResgate.toLocaleDateString("pt-BR");
+        
+        // Cria as células editáveis para aporte e retiradas
+        const inputAporte = `<input type="number" class="aporte-input" value="${aportesIncrementais[i] || 0}" 
+                              step="0.01" style="width: 100%;" onchange="recalcularProjecao()">`;
+        
+        const inputRetirada = `<input type="number" class="retirada-input" value="${retiradas[i] || 0}" 
+                                step="0.01" style="width: 100%;" onchange="recalcularProjecao()">`;
         
         tabela.innerHTML += `
           <tr>
-            <td>${i}º</td>
+            <td>${i + 1}º</td>
             <td>${dataTexto}</td>
             <td>${formatarUSD(reaplicacao)}</td>
             <td>${formatarUSD(ganhoRodada)}</td>
             <td>${formatarUSD(ativoRodada)}</td>
             <td>${typeof energiaRodada === "number" ? formatarUSD(energiaRodada) : energiaRodada}</td>
+            <td class="editable-cell">${inputAporte}</td>
+            <td class="editable-cell">${inputRetirada}</td>
           </tr>`;
       }
     }
@@ -509,4 +566,4 @@
   </script>
 </body>
 </html>
-
+Versão atualizada 
