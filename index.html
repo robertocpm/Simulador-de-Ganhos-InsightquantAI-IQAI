@@ -323,7 +323,7 @@
 
     <!-- Créditos -->
     <div class="creditos">
-      © Roberto Cesar - v2.0
+      © Roberto Cesar - v2.1
     </div>
   </div>
 
@@ -383,6 +383,14 @@
       return isNaN(valor) ? "--" : new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: "USD"
+      }).format(valor);
+    }
+
+    // Formata valores numéricos sem cifrão (para energia por hora)
+    function formatarNumero(valor) {
+      return isNaN(valor) ? "--" : new Intl.NumberFormat("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
       }).format(valor);
     }
 
@@ -500,7 +508,7 @@
       const energiaDia = typeof taxaEnergiaHora === "number" ? taxaEnergiaHora * 24 / 10 : "Fora da faixa";
       const energiaTotal = typeof taxaEnergiaHora === "number" ? energiaDia * C3 : "Fora da faixa";
       
-      energiaHoraEl.innerText = typeof energiaHora === "number" ? formatarUSD(energiaHora) : energiaHora;
+      energiaHoraEl.innerText = typeof energiaHora === "number" ? formatarNumero(energiaHora) : energiaHora;
       energiaDiaEl.innerText = typeof energiaDia === "number" ? formatarUSD(energiaDia) : energiaDia;
       precoTotal.innerText = typeof energiaTotal === "number" ? formatarUSD(energiaTotal) : energiaTotal;
       ganhosIniciais.innerText = formatarUSD(ganhoLiquido);
@@ -566,4 +574,4 @@
   </script>
 </body>
 </html>
-Versão atualizada 
+
